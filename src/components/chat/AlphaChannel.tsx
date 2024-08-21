@@ -4,6 +4,7 @@ import styled from "styled-components";
 import axios from 'axios';
 import { useAppSelector } from '../../libs/redux/hooks';
 import { generateRandomHex } from '../../utils';
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import CopyTextButton from '../buttons/CopyTextButton';
 import TokenCard from "./TokenCard";
@@ -50,7 +51,7 @@ function TipModal({ open, onClose, theme, call }) {
     const tipOptionList = [10, 50, 100];
 
     const wallet = useWallet();
-    const { publicKey, sendTransaction } = useWallet();
+    const { publicKey, sendTransaction, connect, connected } = wallet;
 
     const fetchSolPrice = async () => {
         try {
@@ -63,30 +64,36 @@ function TipModal({ open, onClose, theme, call }) {
     };
 
     const handleTip = async () => {
-        if (!wallet.connected) {
-            wallet.connect();
+        if (!connected) {
+            console.log('Wallet not connected. Connecting now...');
+            await connect();
             return;
         }
+        if (!publicKey) {
+            console.error('Public key is not available. Ensure wallet is connected.');
+            return;
+        }
+
         const solPrice = await fetchSolPrice();
-        const transferAmount = solAmount / solPrice
+        const transferAmount = solAmount * LAMPORTS_PER_SOL;
         console.log("transferAmount", transferAmount, "solPrice", solPrice)
         setTipStatus('Pending Approval');
         setDismissStatus(null);
 
-        const connection = new Connection('https://api.devnet.solana.com');
+        const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
         const toPubkey = new PublicKey("A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv");
-        const balance = await connection.getBalance(publicKey);
-        const lamports = transferAmount * 1000000000;
+        const lamports = Math.round(transferAmount);
 
-
-        if (balance < lamports) {
-            console.log("Insufficient Balance")
-            setTipStatus('Insufficient Balance');
-            setDismissStatus('Dismiss');
-            return;
-        }
 
         try {
+            const balance = await connection.getBalance(publicKey);
+
+            if (balance < lamports) {
+                console.log("Insufficient Balance")
+                setTipStatus('Insufficient Balance');
+                setDismissStatus('Dismiss');
+                return;
+            }
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
                     fromPubkey: publicKey,
@@ -109,13 +116,24 @@ function TipModal({ open, onClose, theme, call }) {
         }
     };
 
-    const handleAmountChange = async (e: any) => {
+    const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const usdAmount = parseFloat(e.target.value);
-        setAmount(usdAmount | 0);
+        if (isNaN(usdAmount) || usdAmount <= 0) {
+            setAmount(0);
+            setSolAmount(0);
+            return;
+        }
 
         const solPrice = await fetchSolPrice();
-        console.log("solPrice", solPrice)
-        setSolAmount(usdAmount / solPrice);
+        if (solPrice > 0) {
+            const calculatedSolAmount = usdAmount / solPrice;
+            setAmount(usdAmount);
+            setSolAmount(calculatedSolAmount);
+        } else {
+            console.error('Failed to fetch SOL price.');
+            setAmount(usdAmount);
+            setSolAmount(0);
+        }
     };
 
     const handleSelectOption = async (v: number) => {
