@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Box, IconButton, Stack, Modal, Typography, Input, Button } from '@mui/material';
 import styled from "styled-components";
-
+import axios from 'axios';
 import { useAppSelector } from '../../libs/redux/hooks';
 import { generateRandomHex } from '../../utils';
 
@@ -43,41 +43,97 @@ const TipOptionInput = styled(Input)`
 function TipModal({ open, onClose, theme, call }) {
 
     const [amount, setAmount] = useState<number>(0);
+    const [solAmount, setSolAmount] = useState<number>(0);
+    const [tipStatus, setTipStatus] = useState<'Tip' | 'Pending Approval' | 'Tipped Successfully' | 'Insufficient Balance'>('Tip');
+    const [dismissStatus, setDismissStatus] = useState<'No Thanks' | 'Dismiss' | null>('No Thanks');
+
     const tipOptionList = [10, 50, 100];
 
     const wallet = useWallet();
-    const [status, setStatus] = useState<'Tip' | 'Pending Approval' | 'Tipped Successfully' | 'Insufficient Balance'>('Tip');
+    const { publicKey, sendTransaction } = useWallet();
+
+    const fetchSolPrice = async () => {
+        try {
+            const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+            return response.data.solana.usd;
+        } catch (error) {
+            console.error('Error fetching SOL price:', error);
+            return 0;
+        }
+    };
 
     const handleTip = async () => {
         if (!wallet.connected) {
             wallet.connect();
             return;
         }
+        const solPrice = await fetchSolPrice();
+        const transferAmount = solAmount / solPrice
+        console.log("transferAmount", transferAmount, "solPrice", solPrice)
+        setTipStatus('Pending Approval');
+        setDismissStatus(null);
 
-        setStatus('Pending Approval');
+        const connection = new Connection('https://api.devnet.solana.com');
+        const toPubkey = new PublicKey("A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv");
+        const balance = await connection.getBalance(publicKey);
+        const lamports = transferAmount * 1000000000;
+
+
+        if (balance < lamports) {
+            console.log("Insufficient Balance")
+            setTipStatus('Insufficient Balance');
+            setDismissStatus('Dismiss');
+            return;
+        }
 
         try {
-            const connection = new Connection('https://api.devnet.solana.com');
-            const fromPubkey = wallet.publicKey;
-            const toPubkey = new PublicKey(call.address);
-
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
-                    fromPubkey,
+                    fromPubkey: publicKey,
                     toPubkey,
-                    lamports: amount * 1000000000, // Amount in lamports (1 SOL = 10^9 lamports)
+                    lamports,
                 })
             );
 
-            const signature = await wallet.sendTransaction(transaction, connection);
+            console.log("transaction", transaction);
+
+            const signature = await sendTransaction(transaction, connection);
             await connection.confirmTransaction(signature, 'confirmed');
 
-            setStatus('Tipped Successfully');
+            setTipStatus('Tipped Successfully');
+            setDismissStatus(null);
         } catch (error) {
             console.error('Transaction failed', error);
-            setStatus('Insufficient Balance');
+            setTipStatus('Insufficient Balance');
+            setDismissStatus('Dismiss');
         }
     };
+
+    const handleAmountChange = async (e: any) => {
+        const usdAmount = parseFloat(e.target.value);
+        setAmount(usdAmount | 0);
+
+        const solPrice = await fetchSolPrice();
+        console.log("solPrice", solPrice)
+        setSolAmount(usdAmount / solPrice);
+    };
+
+    const handleSelectOption = async (v: number) => {
+        const solPrice = await fetchSolPrice();
+        if (solPrice > 0) {
+            setAmount(v);
+            setSolAmount(v / solPrice);
+        }
+    }
+
+    useEffect(() => {
+        // Reset the button text when the modal is closed and reopened
+        if (!open) {
+            setTipStatus('Tip');
+            setDismissStatus('No Thanks');
+            setAmount(0);
+        }
+    }, [open]);
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -106,15 +162,15 @@ function TipModal({ open, onClose, theme, call }) {
                 <div className='flex mx-auto justify-center items-center mb-1'>
                     <Thread />
                 </div>
-                <Stack sx={{ p: 2, flexDirection: "row", justifyContent: "space-between", alignItems: "center", border: "1px solid" }}>
+                <Stack sx={{ p: 2, flexDirection: "row", justifyContent: "space-between", alignItems: "center", border: "1px solid", height: "40px", borderRadius: "3px" }}>
                     <Stack sx={{ flexDirection: "row", alignItems: "center", gap: "4px" }}>
                         <Typography sx={{ color: "#3D3D3D", fontFamily: "JetBrains Mono" }}>$</Typography>
-                        <TipOptionInput type='primary' placeholder='ENTER AMOUNT' value={amount} onChange={(e: any) => { setAmount(e.target.value) }} />
+                        <TipOptionInput type='primary' placeholder='ENTER AMOUNT' value={amount} onChange={handleAmountChange} />
                     </Stack>
                     <Stack sx={{ flexDirection: "row", gap: "8px" }}>
                         {tipOptionList.map((v: number, i: number) => {
                             return (
-                                <TipOptionBtn key={i} onClick={() => { setAmount(v) }}>{`$ ${v}`}</TipOptionBtn>
+                                <TipOptionBtn key={i} onClick={() => handleSelectOption(v)}>{`$ ${v}`}</TipOptionBtn>
                             )
                         })}
                     </Stack>
@@ -127,18 +183,17 @@ function TipModal({ open, onClose, theme, call }) {
                         mb: 2,
                         fontFamily: "jetbrains mono",
                         gap: "3px",
-                        top: "10px",
+                        top: "12px",
                         '&:hover': {
                             bgcolor: '#5D5D5D', // Change the background color on hover
                         },
                     }}
                     onClick={() => handleTip()} // You can handle the actual tipping logic here
                 >
-                    <Bolt />{status}
+                    <Bolt />{tipStatus}
                 </Button>
                 <Button
                     sx={{
-
                         color: theme.bgColor == '#0000FF' ? theme.bgColor : theme.text_color,
                         width: '100%',
                         left: "5px",
@@ -146,7 +201,7 @@ function TipModal({ open, onClose, theme, call }) {
                     }}
                     onClick={onClose}
                 >
-                    No Thanks
+                    {dismissStatus}
                 </Button>
             </Box>
         </Modal>
