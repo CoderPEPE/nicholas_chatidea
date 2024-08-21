@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useWallet } from "@solana/wallet-adapter-react";
 import { Box, IconButton, Stack, Modal, Typography, Input, Button } from '@mui/material';
 import styled from "styled-components";
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 
 import { useAppSelector } from '../../libs/redux/hooks';
 import { generateRandomHex } from '../../utils';
@@ -12,6 +10,8 @@ import TokenCard from "./TokenCard";
 import TipButton from "../buttons/LightButton";
 import Bolt from "../buttons/BoltButton";
 import Thread from "../buttons/Thread";
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
 
 const TipName = styled("div")`
@@ -43,19 +43,41 @@ const TipOptionInput = styled(Input)`
 function TipModal({ open, onClose, theme, call }) {
 
     const [amount, setAmount] = useState<number>(0);
-    const tipOptionList = [10, 50, 100]
+    const tipOptionList = [10, 50, 100];
 
-    const { connect } = useWallet();
-
+    const wallet = useWallet();
+    const [status, setStatus] = useState<'Tip' | 'Pending Approval' | 'Tipped Successfully' | 'Insufficient Balance'>('Tip');
 
     const handleTip = async () => {
-        try {
-            await connect();
-        } catch (error) {
-            console.error("Error connecting wallet:", error)
+        if (!wallet.connected) {
+            wallet.connect();
+            return;
         }
-        onClose();
-    }
+
+        setStatus('Pending Approval');
+
+        try {
+            const connection = new Connection('https://api.devnet.solana.com');
+            const fromPubkey = wallet.publicKey;
+            const toPubkey = new PublicKey(call.address);
+
+            const transaction = new Transaction().add(
+                SystemProgram.transfer({
+                    fromPubkey,
+                    toPubkey,
+                    lamports: amount * 1000000000, // Amount in lamports (1 SOL = 10^9 lamports)
+                })
+            );
+
+            const signature = await wallet.sendTransaction(transaction, connection);
+            await connection.confirmTransaction(signature, 'confirmed');
+
+            setStatus('Tipped Successfully');
+        } catch (error) {
+            console.error('Transaction failed', error);
+            setStatus('Insufficient Balance');
+        }
+    };
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -112,8 +134,7 @@ function TipModal({ open, onClose, theme, call }) {
                     }}
                     onClick={() => handleTip()} // You can handle the actual tipping logic here
                 >
-                    <Bolt />
-                    <WalletModalProvider>Tip</WalletModalProvider>
+                    <Bolt />{status}
                 </Button>
                 <Button
                     sx={{

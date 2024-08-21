@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Grid, Typography, Avatar } from '@mui/material';
+import { Box, Button, Avatar } from '@mui/material';
 import { styled } from '@mui/system';
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faFingerprint, faSync } from '@fortawesome/free-solid-svg-icons';
@@ -51,8 +51,8 @@ const TokenCard = () => {
 
         </div>
         <div>
-          <Button 
-            sx={{ 
+          <Button
+            sx={{
               color: '#ffffff',
               border: '2px solid white',
               borderRadius: '50%',
@@ -133,7 +133,7 @@ const TokenCard = () => {
           }}
         >
           {/* <FontAwesomeIcon icon={faFingerprint} size="1x"/> */}
-        </Box>  
+        </Box>
         BUY
       </BuyButton>
     </Box>
