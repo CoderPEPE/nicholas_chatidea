@@ -3,7 +3,7 @@ import { Box, IconButton, Stack, Modal, Typography, Input, Button } from '@mui/m
 import styled from "styled-components";
 import axios from 'axios';
 import { useAppSelector } from '../../libs/redux/hooks';
-import { generateRandomHex } from '../../utils';
+import { generateRandomHex, parseAmount } from '../../utils';
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import CopyTextButton from '../buttons/CopyTextButton';
@@ -117,8 +117,8 @@ function TipModal({ open, onClose, theme, call }) {
     };
 
     const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const usdAmount = parseFloat(e.target.value);
-        if (isNaN(usdAmount) || usdAmount <= 0) {
+        const usdAmount = e.target.value;
+        if (usdAmount === '' || isNaN(Number(usdAmount))) {
             setAmount(0);
             setSolAmount(0);
             return;
@@ -126,7 +126,7 @@ function TipModal({ open, onClose, theme, call }) {
 
         const solPrice = await fetchSolPrice();
         if (solPrice > 0) {
-            const calculatedSolAmount = usdAmount / solPrice;
+            const calculatedSolAmount = parseFloat(usdAmount) / solPrice;
             setAmount(usdAmount);
             setSolAmount(calculatedSolAmount);
         } else {
@@ -150,6 +150,7 @@ function TipModal({ open, onClose, theme, call }) {
             setTipStatus('Tip');
             setDismissStatus('No Thanks');
             setAmount(0);
+            setSolAmount(0);
         }
     }, [open]);
 
