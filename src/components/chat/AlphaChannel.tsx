@@ -43,7 +43,7 @@ const TipOptionInput = styled(Input)`
 // Modal Component
 function TipModal({ open, onClose, theme, call }) {
 
-    const [amount, setAmount] = useState<number>(0);
+    const [amount, setAmount] = useState<number | string>('');
     const [solAmount, setSolAmount] = useState<number>(0);
     const [tipStatus, setTipStatus] = useState<'Tip' | 'Pending Approval' | 'Tipped Successfully' | 'Insufficient Balance'>('Tip');
     const [dismissStatus, setDismissStatus] = useState<'No Thanks' | 'Dismiss' | null>('No Thanks');
@@ -119,7 +119,7 @@ function TipModal({ open, onClose, theme, call }) {
     const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const usdAmount = e.target.value;
         if (usdAmount === '' || isNaN(Number(usdAmount))) {
-            setAmount(0);
+            setAmount('');
             setSolAmount(0);
             return;
         }
@@ -127,9 +127,11 @@ function TipModal({ open, onClose, theme, call }) {
         const solPrice = await fetchSolPrice();
         if (solPrice > 0) {
             const calculatedSolAmount = parseFloat(usdAmount) / solPrice;
+            setAmount(usdAmount);
             setSolAmount(calculatedSolAmount);
         } else {
             console.error('Failed to fetch SOL price.');
+            setAmount(usdAmount);
             setSolAmount(0);
         }
     };
@@ -147,7 +149,7 @@ function TipModal({ open, onClose, theme, call }) {
         if (!open) {
             setTipStatus('Tip');
             setDismissStatus('No Thanks');
-            setAmount(0);
+            setAmount('');
             setSolAmount(0);
         }
     }, [open]);
@@ -182,7 +184,7 @@ function TipModal({ open, onClose, theme, call }) {
                 <Stack sx={{ p: 2, flexDirection: "row", justifyContent: "space-between", alignItems: "center", border: "1px solid", height: "40px", borderRadius: "3px" }}>
                     <Stack sx={{ flexDirection: "row", alignItems: "center", gap: "4px" }}>
                         <Typography sx={{ color: "#3D3D3D", fontFamily: "JetBrains Mono" }}>$</Typography>
-                        <TipOptionInput type='primary' placeholder='ENTER AMOUNT' value={amount} onChange={handleAmountChange} />
+                        <TipOptionInput type='text' placeholder='ENTER AMOUNT' value={amount} onChange={handleAmountChange} />
                     </Stack>
                     <Stack sx={{ flexDirection: "row", gap: "8px" }}>
                         {tipOptionList.map((v: number, i: number) => {
