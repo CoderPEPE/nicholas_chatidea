@@ -29,7 +29,7 @@ const Profile = () => {
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
-                const response = await axios.get(`${BASE_URI}/api/user-profile?walletAddress=${walletAddress}`);
+                const response = await axios.get(`${BASE_URI}/api/user-profile?walletAddress=6dSeE8J6Zi68evnPMNaHs13y8EpXPVVDnG2NFiMMiPAx`);
                 const { userName, profilePicUrl } = response.data;
                 setUserName(userName || "");  // Populate username using Recoil
                 setProfilePicFromS3(profilePicUrl || "");  // Populate profile picture

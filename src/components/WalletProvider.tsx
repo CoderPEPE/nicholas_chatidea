@@ -10,7 +10,7 @@ type Props = {
   readonly children: React.ReactNode;
 };
 
-const endpoint = clusterApiUrl('mainnet-beta');
+const endpoint = clusterApiUrl('devnet');
 
 const wallets = [new PhantomWalletAdapter()];
 

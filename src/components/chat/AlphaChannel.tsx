@@ -11,9 +11,10 @@ import TokenCard from "./TokenCard";
 import TipButton from "../buttons/LightButton";
 import Bolt from "../buttons/BoltButton";
 import Thread from "../buttons/Thread";
-import { useWallet } from '@solana/wallet-adapter-react';
-import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
-
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
+import * as buffer from "buffer";
+window.Buffer = buffer.Buffer;
 
 const TipName = styled("div")`
     padding-bottom: 8px;
@@ -52,6 +53,7 @@ function TipModal({ open, onClose, theme, call }) {
 
     const wallet = useWallet();
     const { publicKey, sendTransaction, connect, connected } = wallet;
+    const { connection } = useConnection();
 
     const fetchSolPrice = async () => {
         try {
@@ -80,26 +82,36 @@ function TipModal({ open, onClose, theme, call }) {
         setTipStatus('Pending Approval');
         setDismissStatus(null);
 
-        const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
         const toPubkey = new PublicKey("A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv");
+        // const feePubkey = new PublicKey("GE6YNsCEWqK8PaaRuQLFrMGraVjjGrcPToxcV7kGzuyh");
+        
         const lamports = Math.round(transferAmount);
-
 
         try {
             const balance = await connection.getBalance(publicKey);
 
+            const sendAmount = Math.round(lamports*0.99);
+            const feeAmount = Math.round(lamports*0.01);
+            console.log(feeAmount);
+            
             if (balance < lamports) {
                 console.log("Insufficient Balance")
                 setTipStatus('Insufficient Balance');
                 setDismissStatus('Dismiss');
                 return;
             }
+
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
                     fromPubkey: publicKey,
-                    toPubkey,
-                    lamports,
-                })
+                    toPubkey:toPubkey,
+                    lamports:sendAmount,
+                }),
+                // SystemProgram.transfer({
+                //     fromPubkey: publicKey,
+                //     toPubkey:feePubkey,
+                //     lamports:feeAmount,
+                // })
             );
 
             console.log("transaction", transaction);
