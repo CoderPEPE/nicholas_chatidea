@@ -1,16 +1,16 @@
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useState } from "react";
-import Loading from "./components/Loading.tsx";
-import Chat from "./pages/Chat.tsx";
-import { useAppDispatch, useAppSelector } from "./libs/redux/hooks.ts";
-import { connectSocket } from "./libs/redux/slices/pump-socket-slice.ts";
-import TokenswapStack from "./components/token-swap/TokenSwapStack.tsx";
+import Loading from "./components/Loading.js";
+import Chat from "./pages/Chat.js";
+import { useAppDispatch, useAppSelector } from "./libs/redux/hooks";
+import { connectSocket } from "./libs/redux/slices/pump-socket-slice.js";
+import TokenswapStack from "./components/token-swap/TokenSwapStack.js";
 import { ToastContainer } from "react-toastify";
 import { Box, Stack } from "@mui/material";
-import Landing from "./pages/Landing.tsx";
-import Profile from "./pages/Profile.tsx";
-import { loadInitialMessages } from "./libs/redux/slices/chat-slice.ts"; 
+import Landing from "./pages/Landing.js";
+import Profile from "./pages/Profile.js";
+import { loadInitialMessages } from "./libs/redux/slices/chat-slice.js";
 // import filtersSvg from "./assets/wallet-bg-big.png";
 
 const API_URL = import.meta.env.VITE_PUMP_SEVER_URL
@@ -65,13 +65,16 @@ export default function App() {
   const useColor = theme.bgColor === '#0000FF' ? '#FFFF' : theme.bgColor === '#FFF' ? theme.text_color : theme.active_color
 
   return (
-    <Stack style={{
-      width: '100vw', height: '100vh', flexWrap: 'wrap',
-      background: theme.bgColor,
-      isolation: 'isolate'
-    }}>
+    <Stack
+      sx={{
+        width: '100vw', 
+        height: '100vh', 
+        flexWrap: 'wrap',
+        background: theme.bgColor,
+        isolation: 'isolate'
+      }}>
       <Box className=' scale-125 fixed -z-10 left-0 top-0 h-full w-full overflow-hidden'>
-        <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 1440 1064" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 1440 1064" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <g opacity="0.16">
             <path d="M210.794 886.111H1229.93V313.894H210.794V886.111ZM1232.33 888.506H208.399V311.504H1232.33V888.506Z" fill={useColor} />
             <path d="M1231.12 806.414H209.593V804.02H1231.12V806.414Z" fill={useColor} />

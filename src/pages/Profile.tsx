@@ -13,11 +13,11 @@ const BASE_URI = "https://prithvikr.live";
 
 const Profile = () => {
     const websiteTheme = useAppSelector(state => state.theme.current.styles);
-    const [profilePic, setProfilePic] = useState<string | File>(null);
+    const [profilePic, setProfilePic] = useState<string | File>("");
     const [, setShowProfilePicError] = useState(false);
     const [showFileUploadSuccess] = useState(false);
     const [profilePicFromS3, setProfilePicFromS3] = useRecoilState(userProfilePicState);  // Use Recoil for profile pic
-    const [userName, setUserName] = useRecoilState(userNameState);  // Use Recoil for username
+    const [userName, setUserName] = useRecoilState<any>(userNameState);  // Use Recoil for username
     const [isSaveDisabled, setIsSaveDisabled] = useState(true);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -102,7 +102,7 @@ const Profile = () => {
     };
 
     useEffect(() => {
-        if (userName !== null && userName.trim() !== "") {
+        if (userName !== null && userName?.trim() !== "") {
             const delayDebounceFn = setTimeout(() => {
                 setIsSaveDisabled(false);  // Enable save button when the username is not empty
             }, 500);  // Delay in milliseconds
@@ -150,6 +150,7 @@ const Profile = () => {
                             >
                                 <div className="rounded-full h-full w-full overflow-hidden">
                                     <img
+                                        alt=""
                                         src={renderProfilePic()}
                                         className="object-cover w-full h-full"
                                     />
@@ -165,6 +166,7 @@ const Profile = () => {
                                         className="hidden"
                                         id="fileInput"
                                         onChange={handleFileChange}
+                                        placeholder="H"
                                     />
                                     <label
                                         htmlFor="fileInput"

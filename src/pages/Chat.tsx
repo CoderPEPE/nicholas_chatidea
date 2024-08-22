@@ -12,7 +12,7 @@ const Chat = () => {
   const dispatch = useAppDispatch();
   const chatState = useAppSelector(state => state.chat.state);
   const theme = useAppSelector(state => state.theme.current);
-  const chatAudio = useAppSelector(state => state.chat.chatAudio);
+  const chatAudio: any = useAppSelector(state => state.chat.chatAudio);
   const shouldPlayAudio = useAppSelector(state => state.chat.shouldPlayAudio);
   const isMusicPlaying = useAppSelector(state => state.chat.isMusicPlaying);
 

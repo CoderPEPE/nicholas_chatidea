@@ -1,20 +1,31 @@
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Box, IconButton, Stack, Modal, Typography, Input, Button } from '@mui/material';
 import styled from "styled-components";
 import axios from 'axios';
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+
 import { useAppSelector } from '../../libs/redux/hooks';
 import { generateRandomHex } from '../../utils';
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import CopyTextButton from '../buttons/CopyTextButton';
 import TokenCard from "./TokenCard";
 import TipButton from "../buttons/LightButton";
 import Bolt from "../buttons/BoltButton";
 import Thread from "../buttons/Thread";
+// import CircularProgress from '@mui/material/CircularProgress';
+
+
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 import * as buffer from "buffer";
 window.Buffer = buffer.Buffer;
+
+interface TipModalProps {
+    open: boolean,
+    onClose: () => void,
+    theme: any,
+    call: any
+}
 
 const TipName = styled("div")`
     padding-bottom: 8px;
@@ -42,7 +53,7 @@ const TipOptionInput = styled(Input)`
 `;
 
 // Modal Component
-function TipModal({ open, onClose, theme, call }) {
+const  TipModal: FC <TipModalProps> = ({ open, onClose, theme, call })  => {
 
     const [amount, setAmount] = useState<number | string>('');
     const [solAmount, setSolAmount] = useState<number>(0);
@@ -281,7 +292,7 @@ export default function AlphaChannel() {
         setCalls(calls => calls.filter(call => call.id !== item_id))
     }
 
-    const handleTipClick = (call) => {
+    const handleTipClick = (call: any ) => {
         setCallValue(call)
         setOpenModal(true);
     };

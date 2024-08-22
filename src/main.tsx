@@ -10,11 +10,11 @@ import 'swiper/css';
 import 'react-toastify/dist/ReactToastify.css';
 import "./index.css";
 import { RecoilRoot } from "recoil";
-import { SolanaWalletProvider } from "./components/WalletProvider.tsx";
+import { SolanaWalletProvider } from "./components/WalletProvider";
 // import { ContextProvider } from './contexts/ContextProvider';
-import StoreProvider from "./providers/StoreProvider/index.tsx";
+import StoreProvider from "./providers/StoreProvider";
 
-import App from "./App.tsx";
+import App from "./App";
 
 // import ErrorPage from "./components/Error.tsx";
 ReactDOM.createRoot(document.getElementById("root")!).render(
