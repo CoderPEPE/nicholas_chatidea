@@ -3,7 +3,7 @@ import { Box, IconButton, Stack, Modal, Typography, Input, Button } from '@mui/m
 import styled from "styled-components";
 import axios from 'axios';
 import { useAppSelector } from '../../libs/redux/hooks';
-import { generateRandomHex, parseAmount } from '../../utils';
+import { generateRandomHex } from '../../utils';
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import CopyTextButton from '../buttons/CopyTextButton';
@@ -127,11 +127,9 @@ function TipModal({ open, onClose, theme, call }) {
         const solPrice = await fetchSolPrice();
         if (solPrice > 0) {
             const calculatedSolAmount = parseFloat(usdAmount) / solPrice;
-            setAmount(usdAmount);
             setSolAmount(calculatedSolAmount);
         } else {
             console.error('Failed to fetch SOL price.');
-            setAmount(usdAmount);
             setSolAmount(0);
         }
     };
