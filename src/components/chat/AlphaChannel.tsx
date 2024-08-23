@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { Box, IconButton, Stack, Modal, Typography, Input, Button } from '@mui/material';
 import styled from "styled-components";
 import axios from 'axios';
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 
 import { useAppSelector } from '../../libs/redux/hooks';
 import { generateRandomHex } from '../../utils';
@@ -64,7 +64,7 @@ const  TipModal: FC <TipModalProps> = ({ open, onClose, theme, call })  => {
 
     const wallet = useWallet();
     const { publicKey, sendTransaction, connect, connected } = wallet;
-    const { connection } = useConnection();
+    const connection = new Connection('https://prettiest-alpha-layer.solana-mainnet.quiknode.pro/299c8791dd626fb1352a0fd06e92afe2b95aa3cc');
 
     const fetchSolPrice = async () => {
         try {
@@ -94,12 +94,16 @@ const  TipModal: FC <TipModalProps> = ({ open, onClose, theme, call })  => {
         setDismissStatus(null);
 
         const toPubkey = new PublicKey("A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv");
-        // const feePubkey = new PublicKey("GE6YNsCEWqK8PaaRuQLFrMGraVjjGrcPToxcV7kGzuyh");
+        const feePubkey = new PublicKey("GE6YNsCEWqK8PaaRuQLFrMGraVjjGrcPToxcV7kGzuyh");
         
         const lamports = Math.round(transferAmount);
+        console.log(lamports);
+        
 
         try {
+            
             const balance = await connection.getBalance(publicKey);
+            console.log(balance);
 
             const sendAmount = Math.round(lamports*0.99);
             const feeAmount = Math.round(lamports*0.01);
@@ -118,11 +122,11 @@ const  TipModal: FC <TipModalProps> = ({ open, onClose, theme, call })  => {
                     toPubkey:toPubkey,
                     lamports:sendAmount,
                 }),
-                // SystemProgram.transfer({
-                //     fromPubkey: publicKey,
-                //     toPubkey:feePubkey,
-                //     lamports:feeAmount,
-                // })
+                SystemProgram.transfer({
+                    fromPubkey: publicKey,
+                    toPubkey:feePubkey,
+                    lamports:feeAmount,
+                })
             );
 
             console.log("transaction", transaction);
